@@ -1,0 +1,330 @@
+t-immanuel.immanuel@LAPID00236 srspac-app-ecs % awsudo -u PowerUser@tvlk-srs-stg -- terraform apply --target=module.app.aws_cloudwatch_log_group.log_group_ecs
+module.app.module.log_group_name_ecs.random_id.this: Refreshing state... [id=_s0wD0Ccimk]
+module.app.aws_cloudwatch_log_group.log_group_ecs: Refreshing state... [id=/tvlk/app-java/srspac/ecs-fecd300f409c8a69]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # module.app.aws_cloudwatch_log_group.log_group_ecs will be updated in-place
+  ~ resource "aws_cloudwatch_log_group" "log_group_ecs" {
+        id                = "/tvlk/app-java/srspac/ecs-fecd300f409c8a69"
+        name              = "/tvlk/app-java/srspac/ecs-fecd300f409c8a69"
+      ~ tags              = {
+            "Application"   = "java"
+            "Cluster"       = "srspac-app"
+            "Environment"   = "staging"
+            "ManagedBy"     = "terraform"
+            "Name"          = "/tvlk/app-java/srspac/ecs-fecd300f409c8a69"
+          + "Owner"         = "LOC"
+            "ProductDomain" = "srs"
+            "Service"       = "srspac"
+        }
+      ~ tags_all          = {
+          + "Owner"         = "LOC"
+            # (7 unchanged elements hidden)
+        }
+        # (2 unchanged attributes hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+╷
+│ Warning: Resource targeting is in effect
+│ 
+│ You are creating a plan with the -target option, which means that the result of this plan may not represent all of the changes requested by the current configuration.
+│ 
+│ The -target option is not for routine use, and is provided only for exceptional situations such as recovering from errors or mistakes, or when Terraform specifically suggests to use it as part of
+│ an error message.
+╵
+╷
+│ Warning: Version constraints inside provider configuration blocks are deprecated
+│ 
+│   on main.tf line 11, in provider "aws":
+│   11:   version = "~> 3.0"
+│ 
+│ Terraform 0.13 and earlier allowed provider version constraints inside the provider configuration block, but that is now deprecated and will be removed in a future version of Terraform. To silence
+│ this warning, move the provider version constraint into the required_providers block.
+│ 
+│ (and 2 more similar warnings elsewhere)
+╵
+
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+module.app.aws_cloudwatch_log_group.log_group_ecs: Modifying... [id=/tvlk/app-java/srspac/ecs-fecd300f409c8a69]
+module.app.aws_cloudwatch_log_group.log_group_ecs: Modifications complete after 0s [id=/tvlk/app-java/srspac/ecs-fecd300f409c8a69]
+╷
+│ Warning: Applied changes may be incomplete
+│ 
+│ The plan was created with the -target option in effect, so some changes requested in the configuration may have been ignored and the output values may not be fully updated. Run the following
+│ command to verify that no other changes are pending:
+│     terraform plan
+│       
+│ Note that the -target option is not suitable for routine use, and is provided only for exceptional situations such as recovering from errors or mistakes, or when Terraform specifically suggests to
+│ use it as part of an error message.
+╵
+Releasing state lock. This may take a few moments...
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+app_sg_id = "sg-00d19dcd7705cc33f"
+ecs_cluster_name = "uns-cluster-b288445c2b097278"
+ecs_service_name = "srspac-app-dcbabf6fc57dd772"
+lb_listener_arn = "arn:aws:elasticloadbalancing:ap-southeast-1:029580254974:listener/app/srspac-lbint-8debc2b4526b8f7a/c0b38d23576db20e/a967bde765d99d07"
+lb_tg_1_name = "srspac-app-628de29c50ca827d"
+lb_tg_2_name = "srspac-app-e49a63134712360d"
+task_role_arn = "arn:aws:iam::029580254974:role/service-role/ecs-tasks.amazonaws.com/ServiceRoleForEcs-Tasks_srspac-task-9a42b6c044fdd53e"
+task_role_name = "ServiceRoleForEcs-Tasks_srspac-task-9a42b6c044fdd53e"
+taskdef_family = "srspac-app-34e6e3ba027d55a8"
+t-immanuel.immanuel@LAPID00236 srspac-app-ecs % awsudo -u PowerUser@tvlk-srs-stg -- terraform plan                                                            
+module.app.module.task_role.random_id.role_name: Refreshing state... [id=mkK2wET91T4]
+data.terraform_remote_state.certificate: Reading...
+data.terraform_remote_state.vpc: Reading...
+data.terraform_remote_state.srspac_new_redis: Reading...
+data.terraform_remote_state.ecs_cluster: Reading...
+data.terraform_remote_state.ext_shared_alb: Reading...
+module.app.module.service.module.taskdef_name.random_id.this: Refreshing state... [id=NObjugJ9Vag]
+data.terraform_remote_state.dynprops_dynamo: Reading...
+data.terraform_remote_state.common_ec2_policy: Reading...
+module.app.module.execution_role.random_id.role_name: Refreshing state... [id=z4AwjqtBrzY]
+module.app.module.alb-single-listener_lbint.module.random_tg.random_id.this: Refreshing state... [id=Yo3inFDKgn0]
+data.terraform_remote_state.shared_alb: Reading...
+module.app.module.service.module.service_name.random_id.this: Refreshing state... [id=3Lq_b8V913I]
+module.app.module.log_group_name_ecs.random_id.this: Refreshing state... [id=_s0wD0Ccimk]
+module.app.module.alb-single-listener_lbint.module.random_tg_standby.random_id.this: Refreshing state... [id=5JpjE0cSNg0]
+data.terraform_remote_state.session_manager_config: Reading...
+data.terraform_remote_state.common_ec2_policy: Read complete after 2s
+data.terraform_remote_state.srs_stg_tvlk_cloud: Reading...
+data.terraform_remote_state.srspac_new_redis: Read complete after 2s
+data.terraform_remote_state.dep_shared_resources: Reading...
+data.terraform_remote_state.ecs_cluster: Read complete after 2s
+module.app.module.app_sg_name.random_id.this: Refreshing state... [id=tPVYVYIHeqA]
+data.terraform_remote_state.dynprops_dynamo: Read complete after 2s
+data.terraform_remote_state.certificate: Read complete after 2s
+data.terraform_remote_state.session_manager_config: Read complete after 2s
+data.terraform_remote_state.shared_alb: Read complete after 2s
+data.terraform_remote_state.ext_shared_alb: Read complete after 2s
+data.terraform_remote_state.vpc: Read complete after 2s
+module.app.module.alb-single-listener_lbint.module.random_lb.random_id.this: Refreshing state... [id=jevCtFJrj3o]
+module.app.data.aws_iam_account_alias.current: Reading...
+module.app.data.aws_acm_certificate.acm_private_zone: Reading...
+module.app.data.aws_subnet_ids.subnet_app_ids: Reading...
+module.app.aws_cloudwatch_log_group.app_application_log: Refreshing state... [id=/tvlk/app-java/srspac/application.log]
+module.app.aws_cloudwatch_log_group.log_group_ecs: Refreshing state... [id=/tvlk/app-java/srspac/ecs-fecd300f409c8a69]
+module.app.module.execution_role.module.this.data.aws_caller_identity.current: Reading...
+module.app.module.task_role.data.aws_iam_policy_document.this: Reading...
+module.app.module.alb-single-listener_lbint.aws_lb_target_group.init_standby: Refreshing state... [id=arn:aws:elasticloadbalancing:ap-southeast-1:029580254974:targetgroup/srspac-app-e49a63134712360d/1195bc88493c02d1]
+module.app.module.task_role.data.aws_iam_policy_document.this: Read complete after 0s [id=320642683]
+module.app.aws_cloudwatch_log_group.app_api_log: Refreshing state... [id=/tvlk/app-java/srspac/api_access.log]
+module.app.data.aws_subnet_ids.subnet_app_ids: Read complete after 0s [id=vpc-0886ce4c12649bebb]
+module.app.aws_cloudwatch_log_group.app_rpc_server_log: Refreshing state... [id=/tvlk/app-java/srspac/rpc_server.log]
+module.app.module.alb-single-listener_lbint.aws_lb_target_group.init_active: Refreshing state... [id=arn:aws:elasticloadbalancing:ap-southeast-1:029580254974:targetgroup/srspac-app-628de29c50ca827d/e6348732508054b7]
+module.app.data.aws_vpc.this: Reading...
+data.terraform_remote_state.srs_stg_tvlk_cloud: Read complete after 2s
+module.app.data.aws_iam_policy_document.allow_read_and_write_for_dynprops: Reading...
+module.app.data.aws_iam_policy_document.allow_read_and_write_for_dynprops: Read complete after 0s [id=1460263246]
+data.aws_caller_identity.caller: Reading...
+module.app.module.execution_role.data.aws_iam_policy_document.this: Reading...
+module.app.module.execution_role.data.aws_iam_policy_document.this: Read complete after 0s [id=320642683]
+module.app.aws_security_group.app_sg: Refreshing state... [id=sg-00d19dcd7705cc33f]
+module.app.data.aws_region.current: Reading...
+module.app.data.aws_region.current: Read complete after 0s [id=ap-southeast-1]
+module.app.data.aws_iam_policy_document.execute_command: Reading...
+module.app.data.aws_iam_policy_document.execute_command: Read complete after 0s [id=875361631]
+module.app.aws_cloudwatch_log_group.app_console_log: Refreshing state... [id=/tvlk/app-java/srspac/console.log]
+data.terraform_remote_state.dep_shared_resources: Read complete after 2s
+module.app.aws_cloudwatch_log_group.app_rpc_client_log: Refreshing state... [id=/tvlk/app-java/srspac/rpc_client.log]
+module.app.module.service.data.aws_region.current: Reading...
+module.app.module.service.data.aws_region.current: Read complete after 0s [id=ap-southeast-1]
+module.app.data.aws_iam_role.autoscaling: Reading...
+module.app.data.aws_ecs_cluster.main: Reading...
+module.app.data.aws_acm_certificate.acm_private_zone: Read complete after 1s [id=arn:aws:acm:ap-southeast-1:029580254974:certificate/34f6e192-0063-441c-8d76-0c5bf27f33fa]
+module.app.data.aws_caller_identity.current: Reading...
+module.app.module.execution_role.module.this.data.aws_caller_identity.current: Read complete after 1s [id=029580254974]
+module.app.data.aws_iam_policy_document.assume_kafka_pubsub_secret_accessor: Reading...
+module.app.data.aws_iam_policy_document.assume_kafka_pubsub_secret_accessor: Read complete after 0s [id=3038392582]
+aws_codedeploy_app.main: Refreshing state... [id=6acdd527-e051-4f5c-a0a1-1590e756ed5f:srspac-app]
+module.app.module.task_role.module.this.data.aws_caller_identity.current: Reading...
+module.app.data.aws_ecs_cluster.main: Read complete after 0s [id=arn:aws:ecs:ap-southeast-1:029580254974:cluster/uns-cluster-b288445c2b097278]
+module.app.data.aws_route53_zone.private_zone: Reading...
+module.app.aws_security_group_rule.allow_egress_to_all_at_443: Refreshing state... [id=sgrule-3212477587]
+module.app.aws_security_group_rule.allow_ingress_on_srspac_redis: Refreshing state... [id=sgrule-1746089208]
+module.app.aws_security_group_rule.app_ingress_from_ext_shared_alb_lbint: Refreshing state... [id=sgrule-2269133822]
+module.app.aws_security_group_rule.app_ingress_from_alb_lbint: Refreshing state... [id=sgrule-346990614]
+module.app.aws_security_group_rule.allow_egress_to_srspac_redis: Refreshing state... [id=sgrule-119967182]
+module.app.aws_security_group_rule.shared_alb_ingress_from_app: Refreshing state... [id=sgrule-1871309385]
+module.app.data.aws_vpc.this: Read complete after 1s [id=vpc-0886ce4c12649bebb]
+module.app.aws_security_group_rule.ext_shared_alb_lbint_egress_to_app: Refreshing state... [id=sgrule-3716649414]
+data.aws_caller_identity.caller: Read complete after 1s [id=029580254974]
+module.app.aws_security_group_rule.app_egress_to_alb_lbint: Refreshing state... [id=sgrule-3968857331]
+module.app.module.task_role.module.this.aws_iam_role.this: Refreshing state... [id=ServiceRoleForEcs-Tasks_srspac-task-9a42b6c044fdd53e]
+module.app.module.execution_role.module.this.aws_iam_role.this: Refreshing state... [id=ServiceRoleForEcs-Tasks_srspac-execution-cf80308eab41af36]
+module.app.data.aws_caller_identity.current: Read complete after 1s [id=029580254974]
+module.app.data.terraform_remote_state.dd_key: Reading...
+module.app.data.aws_iam_policy_document.task_role_base: Reading...
+module.app.data.aws_iam_policy_document.app: Reading...
+module.app.data.aws_iam_policy_document.execution_role_base: Reading...
+module.app.data.aws_iam_policy_document.task_role_base: Read complete after 0s [id=2607276049]
+module.app.data.aws_iam_policy_document.app: Read complete after 0s [id=756495297]
+module.app.module.alb-single-listener_lbint.aws_lb.main: Refreshing state... [id=arn:aws:elasticloadbalancing:ap-southeast-1:029580254974:loadbalancer/app/srspac-lbint-8debc2b4526b8f7a/c0b38d23576db20e]
+module.app.data.aws_iam_policy_document.execution_role_base: Read complete after 0s [id=1963895201]
+module.app.module.task_role.module.this.data.aws_caller_identity.current: Read complete after 2s [id=029580254974]
+module.app.module.alb-single-listener_lbint.aws_lb_listener.main: Refreshing state... [id=arn:aws:elasticloadbalancing:ap-southeast-1:029580254974:listener/app/srspac-lbint-8debc2b4526b8f7a/c0b38d23576db20e/a967bde765d99d07]
+module.app.data.terraform_remote_state.dd_key: Read complete after 2s
+module.app.data.aws_route53_zone.private_zone: Read complete after 6s [id=Z20VVSGZ7IEYG9]
+module.app.aws_route53_record.r53_record_service_name: Refreshing state... [id=Z20VVSGZ7IEYG9_srspac.srs.stg-tvlk.cloud_A_ECS]
+module.app.aws_route53_record.ext_sharedlb_r53_record_service_name: Refreshing state... [id=Z20VVSGZ7IEYG9_ext-srspac.srs.stg-tvlk.cloud_A_ECS]
+module.app.data.aws_iam_account_alias.current: Still reading... [10s elapsed]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform planned the following actions, but then encountered a problem:
+
+  # module.app.aws_cloudwatch_log_group.app_application_log will be updated in-place
+  ~ resource "aws_cloudwatch_log_group" "app_application_log" {
+        id                = "/tvlk/app-java/srspac/application.log"
+        name              = "/tvlk/app-java/srspac/application.log"
+      ~ tags              = {
+          + "Owner" = "LOC"
+        }
+      ~ tags_all          = {
+          + "Owner" = "LOC"
+        }
+        # (2 unchanged attributes hidden)
+    }
+
+  # module.app.aws_cloudwatch_log_group.app_console_log will be updated in-place
+  ~ resource "aws_cloudwatch_log_group" "app_console_log" {
+        id                = "/tvlk/app-java/srspac/console.log"
+        name              = "/tvlk/app-java/srspac/console.log"
+      ~ tags              = {
+          + "Owner" = "LOC"
+        }
+      ~ tags_all          = {
+          + "Owner" = "LOC"
+        }
+        # (2 unchanged attributes hidden)
+    }
+
+  # module.app.aws_cloudwatch_log_group.app_rpc_client_log will be updated in-place
+  ~ resource "aws_cloudwatch_log_group" "app_rpc_client_log" {
+        id                = "/tvlk/app-java/srspac/rpc_client.log"
+        name              = "/tvlk/app-java/srspac/rpc_client.log"
+      ~ tags              = {
+          + "Owner" = "LOC"
+        }
+      ~ tags_all          = {
+          + "Owner" = "LOC"
+        }
+        # (2 unchanged attributes hidden)
+    }
+
+  # module.app.aws_cloudwatch_log_group.app_rpc_server_log will be updated in-place
+  ~ resource "aws_cloudwatch_log_group" "app_rpc_server_log" {
+        id                = "/tvlk/app-java/srspac/rpc_server.log"
+        name              = "/tvlk/app-java/srspac/rpc_server.log"
+      ~ tags              = {
+          + "Owner" = "LOC"
+        }
+      ~ tags_all          = {
+          + "Owner" = "LOC"
+        }
+        # (2 unchanged attributes hidden)
+    }
+
+  # module.app.aws_security_group.app_sg will be updated in-place
+  ~ resource "aws_security_group" "app_sg" {
+        id                     = "sg-00d19dcd7705cc33f"
+        name                   = "srspac-app-b4f5585582077aa0"
+      + revoke_rules_on_delete = false
+        tags                   = {
+            "Description"   = "Security Group for srspac-app"
+            "Environment"   = "staging"
+            "ManagedBy"     = "terraform"
+            "Name"          = "srspac-app-b4f5585582077aa0"
+            "ProductDomain" = "srs"
+            "Service"       = "srspac"
+        }
+        # (7 unchanged attributes hidden)
+
+      - timeouts {}
+    }
+
+  # module.app.module.alb-single-listener_lbint.aws_lb.main will be updated in-place
+  ~ resource "aws_lb" "main" {
+        id                               = "arn:aws:elasticloadbalancing:ap-southeast-1:029580254974:loadbalancer/app/srspac-lbint-8debc2b4526b8f7a/c0b38d23576db20e"
+        name                             = "srspac-lbint-8debc2b4526b8f7a"
+      ~ tags                             = {
+            "Description"   = "Internal load balancer for srspac"
+            "Environment"   = "staging"
+            "ManagedBy"     = "terraform"
+            "Name"          = "srspac-lbint-8debc2b4526b8f7a"
+          + "Owner"         = "LOC"
+            "ProductDomain" = "srs"
+            "Service"       = "srspac"
+        }
+      ~ tags_all                         = {
+          + "Owner"         = "LOC"
+            # (6 unchanged elements hidden)
+        }
+        # (17 unchanged attributes hidden)
+
+        # (4 unchanged blocks hidden)
+    }
+
+Plan: 0 to add, 6 to change, 0 to destroy.
+╷
+│ Warning: Version constraints inside provider configuration blocks are deprecated
+│ 
+│   on main.tf line 11, in provider "aws":
+│   11:   version = "~> 3.0"
+│ 
+│ Terraform 0.13 and earlier allowed provider version constraints inside the provider configuration block, but that is now deprecated and will be removed in a future version of Terraform. To silence
+│ this warning, move the provider version constraint into the required_providers block.
+│ 
+│ (and 2 more similar warnings elsewhere)
+╵
+╷
+│ Error: error reading IAM Role (ServiceRoleForEcs-Tasks_srspac-execution-cf80308eab41af36): AccessDenied: User: arn:aws:sts::029580254974:assumed-role/PowerUser/t-immanuel.immanuel is not authorized to perform: iam:GetRole on resource: role ServiceRoleForEcs-Tasks_srspac-execution-cf80308eab41af36 because no identity-based policy allows the iam:GetRole action
+│       status code: 403, request id: 1907a7b6-e9c4-4063-92fd-7b90d34250a1
+│ 
+│   with module.app.module.execution_role.module.this.aws_iam_role.this,
+│   on .terraform/modules/app.execution_role/main.tf line 6, in resource "aws_iam_role" "this":
+│    6: resource "aws_iam_role" "this" {
+│ 
+╵
+╷
+│ Error: error reading IAM Role (ServiceRoleForEcs-Tasks_srspac-task-9a42b6c044fdd53e): AccessDenied: User: arn:aws:sts::029580254974:assumed-role/PowerUser/t-immanuel.immanuel is not authorized to perform: iam:GetRole on resource: role ServiceRoleForEcs-Tasks_srspac-task-9a42b6c044fdd53e because no identity-based policy allows the iam:GetRole action
+│       status code: 403, request id: 61bbb9a1-3212-4c20-a337-f2576c5c80b9
+│ 
+│   with module.app.module.task_role.module.this.aws_iam_role.this,
+│   on .terraform/modules/app.task_role/main.tf line 6, in resource "aws_iam_role" "this":
+│    6: resource "aws_iam_role" "this" {
+│ 
+╵
+╷
+│ Error: AccessDenied: User: arn:aws:sts::029580254974:assumed-role/PowerUser/t-immanuel.immanuel is not authorized to perform: iam:ListAccountAliases on resource: * because no identity-based policy allows the iam:ListAccountAliases action
+│       status code: 403, request id: 61a56d3a-27f8-469e-b38c-d0082c6bb4e2
+│ 
+│   with module.app.data.aws_iam_account_alias.current,
+│   on .terraform/modules/app/data.tf line 7, in data "aws_iam_account_alias" "current":
+│    7: data "aws_iam_account_alias" "current" {
+│ 
+╵
+╷
+│ Error: error reading IAM Role (AWSServiceRoleForApplicationAutoScaling_ECSService): AccessDenied: User: arn:aws:sts::029580254974:assumed-role/PowerUser/t-immanuel.immanuel is not authorized to perform: iam:GetRole on resource: role AWSServiceRoleForApplicationAutoScaling_ECSService because no identity-based policy allows the iam:GetRole action
+│       status code: 403, request id: f307a9ff-8583-4365-9400-b20416c28500
+│ 
+│   with module.app.data.aws_iam_role.autoscaling,
+│   on .terraform/modules/app/data.tf line 46, in data "aws_iam_role" "autoscaling":
+│   46: data "aws_iam_role" "autoscaling" {
+│ 
+╵
+Releasing state lock. This may take a few moments...

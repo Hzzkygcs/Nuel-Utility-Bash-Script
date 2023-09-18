@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+output=$(terrplan | clean_terraform_output.py | find_and_remove.py -f "Warnings:" -remove-after -remove-substring -allow-not-found | strip.py)
+output=$(echo "$output" |  find_and_remove.py -f "You can apply this plan to save these new output values to the Terraform" -remove-substring -allow-not-found)
+output=$(echo "$output" |  find_and_remove.py -f "state, without changing any real infrastructure." -remove-substring -allow-not-found)
+echo "$output"

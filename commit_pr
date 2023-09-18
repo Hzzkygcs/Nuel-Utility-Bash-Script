@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# This is a non-persistent command. You may need to edit this, depends on use cases
+
+# feel free to remove this
+
+
+if [ -z "$1" ]
+  then
+    echo "Referenced PR argument not given"
+    exit 1
+fi
+
+terrinit
+clear
+terrinit
+
+read -p "Press key to continue.. " -n1 -s
+clear
+echo "continuing..."
+
+terrplanclean
+
+read -p "Press key to continue.. " -n1 -s
+clear
+echo "continuing..."
+
+git add .
+
+directory_name=$(basename "`pwd`")
+
+
+prev_branch="upstream/master"
+# prev_branch=$(git branch --show-current)
+
+echo "prev_branch $prev_branch"
+
+# feel free edit branch name
+curr_branch="feat/$directory_name/owner-tag"
+git checkout -b "$curr_branch" "$prev_branch"
+git checkout "$curr_branch"
+
+
+echo "prev_branch $curr_branch"
+
+# feel free edit commit msg
+git add .
+git commit -m "chore: add Owner tag $directory_name"
+git log -n 1 --oneline
+
+git push origin "$curr_branch"
+
+pull_req_body=$(terrplanclean | template.py --service_name "$directory_name" --referenced_pr "$1")
+hub pull-request --push -b "master" -h "$curr_branch" -m "$pull_req_body" -d
+
+git checkout "$prev_branch"

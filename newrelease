@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]
+  then
+    echo "No version supplied"
+    git describe --tags $(git rev-list --tags --max-count=4)  --abbrev=0
+    git open upstream master
+    exit 1
+fi
+
+release_version="$1"
+
+curr_branch=$(git branch --show-current)
+release_branch="release/$release_version"
+git checkout -b "$release_branch"
+git checkout "$release_branch"
+git push upstream "$release_branch"
+
+hub release create -p -o -m "$release_version" "$release_version" -t "$release_branch"
+
+git push --delete upstream "$release_branch"
+git branch -D "$release_branch"
+git checkout "$curr_branch"
+printf "$release_version" | pbcopy
+
