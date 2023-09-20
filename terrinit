@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
-
-parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
-pushd "$parent_path" > /dev/null
-default_profile=$(cat "./data/profile.txt")
-popd > /dev/null
+parent_path_of_the_script=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+default_profile=$(terrprofile)
 
 awsudo -u ${1:-"$default_profile"} -- terraform init
 

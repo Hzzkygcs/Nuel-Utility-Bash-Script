@@ -1,17 +1,50 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 
-parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
-pushd "$parent_path" > /dev/null
-
-
-if [ -z "$1" ]
-  then
-    cat "./data/profile.txt"
-    echo
-else
-    printf "$1" > "./data/profile.txt"
-fi
+import os
+import sys
+from common.arg_utils import get_all_args
+from common.io_utils import read_pipelined_input
+from folderconfig import CREATE_AND_TRY_AGAIN, get_config_key, set_config_key
 
 
+def chdir_to_path_of_script():
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
 
-popd > /dev/null
+
+
+default_profile_file = "./data/profile.txt"
+config_key = 'awsudo_profile'
+
+def main():
+    arguments = get_all_args(sys.argv[1:])
+    if 0 in arguments:
+        return write(arguments, arguments[0])
+    return read(arguments)
+
+
+def read(arguments):
+    if 'global' not in arguments:
+        profile = get_config_key(config_key)
+        if profile is not None:
+            return print(profile)
+    
+    chdir_to_path_of_script()
+    with open(default_profile_file) as f:
+        return print(f.read())
+
+
+def write(arguments, new_profile_value):
+    if 'global' not in arguments:
+        set_config_key(config_key, new_profile_value, required_key_to_exists=config_key, 
+                       on_not_found=CREATE_AND_TRY_AGAIN)
+        return
+    
+    chdir_to_path_of_script()
+    with open(default_profile_file, 'w') as f:
+        f.write(new_profile_value)
+
+
+if __name__ == "__main__":
+    main()
