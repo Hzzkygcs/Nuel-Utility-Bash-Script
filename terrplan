@@ -6,5 +6,11 @@ default_profile=$(cat "./data/profile.txt")
 popd > /dev/null
 
 # Intern role, add this arguments: -refresh=false -lock=false 
-awsudo -u "$default_profile" -- terraform plan -compact-warnings "$@"
+if [[ "$default_profile" == Intern* ]] ;
+then
+    awsudo -u "$default_profile" -- terraform plan -refresh=false -lock=false -compact-warnings "$@"
+else
+    awsudo -u "$default_profile" -- terraform plan -compact-warnings "$@"
+fi
+
 

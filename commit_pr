@@ -18,7 +18,8 @@ read -p "Press key to continue.. " -n1 -s
 clear
 echo "continuing..."
 
-terrplanclean
+terrplanclean_result=$(terrplanclean)
+echo "$terrplanclean_result"
 
 read -p "Press key to continue.. " -n1 -s
 clear
@@ -28,9 +29,16 @@ git add .
 
 directory_name=$(basename "`pwd`")
 
+prev_branch=$(git branch --show-current)
 
-prev_branch="upstream/master"
 # prev_branch=$(git branch --show-current)
+
+if [ -z "$2" ]
+  then
+    prev_branch="upstream/master"
+    echo "no arguments given... Setting prev_branch to upstream/master"
+fi
+
 
 echo "prev_branch $prev_branch"
 
@@ -49,7 +57,7 @@ git log -n 1 --oneline
 
 git push origin "$curr_branch"
 
-pull_req_body=$(terrplanclean | template.py --service_name "$directory_name" --referenced_pr "$1")
-hub pull-request --push -b "master" -h "$curr_branch" -m "$pull_req_body" -d
+pull_req_body=$(echo "$terrplanclean_result" | template.py --service_name "$directory_name" --referenced_pr "$1")
+hub pull-request --push -b "master" -h "$curr_branch" -m "$pull_req_body"
 
 git checkout "$prev_branch"

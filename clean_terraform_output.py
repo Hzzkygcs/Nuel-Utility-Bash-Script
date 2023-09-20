@@ -10,7 +10,7 @@ def is_reading(string):
     return bool(pattern.match(string))
 
 def is_refreshing_state(string):
-    pattern = re.compile("^\\s*[a-zA-Z_0-9.]+: Refreshing state\\.\\.\\. \\[id=[a-f0-9A-F]+\\]\\s*$")
+    pattern = re.compile("^\\s*[a-zA-Z_0-9.]+: Refreshing state\\.\\.\\. \\[id=.+\\]\\s*$")
     return bool(pattern.match(string))
 
 def is_read_complete(string):
@@ -21,6 +21,8 @@ def is_still_reading(string):
     pattern = re.compile("^\\s*[a-zA-Z_0-9.]+: Refreshing state\\.\\.\\.( \\[.+elapsed\\])?\\s*$")
     return bool(pattern.match(string))
 
+def is_warning(string):
+    return string.startswith("╷") or string.startswith("│ ") or string.startswith("╵")
 
 
 """
@@ -42,6 +44,8 @@ def main():
         if is_refreshing_state(line):
             continue
         if is_read_complete(line):
+            continue
+        if is_warning(line):
             continue
         # print("yow", repr(line))
         print(line)
