@@ -2,5 +2,13 @@
 parent_path_of_the_script=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 default_profile=$(terrprofile)
 
-awsudo -u ${1:-"$default_profile"} -- terraform init
 
+
+# awsudo -u ${1:-"$default_profile"} -- terraform init
+
+# ===============================================================
+# Please read and do "REAMEs/Setup AWS terraform commands.md"
+# ===============================================================
+
+. assume ${1:-"$default_profile"}
+terraform init -compact-warnings "$@"

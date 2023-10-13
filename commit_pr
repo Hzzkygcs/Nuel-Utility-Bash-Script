@@ -33,11 +33,15 @@ prev_branch=$(git branch --show-current)
 
 # prev_branch=$(git branch --show-current)
 
-if [ -z "$2" ]
-  then
-    prev_branch="upstream/master"
-    echo "no arguments given... Setting prev_branch to upstream/master"
-fi
+
+prev_branch="upstream/master"
+echo "no arguments given... Setting prev_branch to upstream/master"
+# if [ -z "$2" ]
+#   then
+#     prev_branch="upstream/master"
+#     echo "no arguments given... Setting prev_branch to upstream/master"
+# fi
+
 
 
 echo "prev_branch $prev_branch"
@@ -57,7 +61,7 @@ git log -n 1 --oneline
 
 git push origin "$curr_branch"
 
-pull_req_body=$(echo "$terrplanclean_result" | template.py --service_name "$directory_name" --referenced_pr "$1")
-hub pull-request --push -b "master" -h "$curr_branch" -m "$pull_req_body"
+pull_req_body=$(echo "$terrplanclean_result" | template.py --service_name "$directory_name" --referenced_pr "$1" --new_version "$2")
+hub pull-request --push -b "master" -h "$curr_branch" -m "$pull_req_body" -o -d
 
 git checkout "$prev_branch"

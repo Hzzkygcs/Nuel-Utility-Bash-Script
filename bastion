@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# just an alias for ec2conn
+
+ec2conn "$@"

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+base_data_path="./data/bastion/"
+parent_path_of_the_script=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+bastion_profile="$1"
+
+
+pushd "$parent_path_of_the_script" > /dev/null
+
+awsudo_profile=$(cat "${base_data_path}${bastion_profile}.txt" | head -1)
+ecs2_id=$(cat "${base_data_path}${bastion_profile}.txt" | head -2 | tail -1)  # take the second line
+
+popd > /dev/null
+
+echo "$awsudo_profile"
+echo "$ecs2_id"
+
+awsudo -u "$awsudo_profile" -- aws ssm start-session --target "$ecs2_id"

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+
+release_branch_name=$(folderconfig get release_branch -default null)
+
+if [ "$1" != "" ]; then
+    folderconfig set release_branch "$1" -create-if-not-exist
+    exit 0
+fi
+
+if [ "$release_branch_name" == "null" ]; then
+	echo "release_branch configuration key is not set. Please run 'deploy YOUR_RELEASE_BRANCH'"
+    exit 1
+fi
+
+
+
+
+complete_release_branch_name="release/$release_branch_name"
+echo "target branch: $complete_release_branch_name"
+
+current_branch=$(git branch --show-current)
+git branch -D "$complete_release_branch_name"
+git checkout -b "$complete_release_branch_name"
+git push --delete upstream "$complete_release_branch_name"
+git push upstream "$complete_release_branch_name"
+
+git checkout "$current_branch"
+

@@ -5,7 +5,11 @@ pushd "$parent_path" > /dev/null
 default_profile=$(cat "./data/profile.txt")
 popd > /dev/null
 
-awsudo -u "$default_profile" -- terraform apply "$@"
+# awsudo -u "$default_profile" -- terraform apply "$@"
+
+
+. assume "$default_profile"
+terraform apply -compact-warnings "$@"
 
 
 

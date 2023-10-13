@@ -4,12 +4,13 @@ parent_path_of_the_script=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 default_profile=$(terrprofile)
 
 
-# Intern role, add this arguments: -refresh=false -lock=false 
-if [[ "$default_profile" == Intern* ]] ;
-then
-    awsudo -u "$default_profile" -- terraform plan -refresh=false -lock=false -compact-warnings "$@"
-else
-    awsudo -u "$default_profile" -- terraform plan -compact-warnings "$@"
-fi
+# # Intern role, add this arguments: -refresh=false -lock=false 
+# if [[ "$default_profile" == Intern* ]] ;
+# then
+#     awsudo -u "$default_profile" -- terraform plan -refresh=false -lock=false -compact-warnings "$@"
+# else
+#     awsudo -u "$default_profile" -- terraform plan -compact-warnings "$@"
+# fi
 
-
+. assume "$default_profile"
+terraform plan -compact-warnings "$@"
