@@ -6,7 +6,10 @@ provider "google" {
     zone = "us-central1-c"
 }
 
-
+// After applying this, you can see a new Google API Key will be created after applying the terraform:
+// https://console.cloud.google.com/apis/credentials/key/some-unique-name?project=traveloka-testing-calendar-api
+// or:
+// https://console.cloud.google.com/apis/credentials?project=traveloka-testing-calendar-api
 resource "google_apikeys_key" "google_calendar_api_key" {
   name         = "some-unique-name"
   display_name = "Google Calendar API Key"
