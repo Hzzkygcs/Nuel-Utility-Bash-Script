@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# You need to install `jq` bash to allow us parse Json and read Json keys
+
+. assume $(terrprofile)
+AWS_STS_CALLER_IDENTITY=$(aws sts get-caller-identity)
+
+USER_ID = $(echo "$AWS_STS_CALLER_IDENTITY" | jq ".UserId")
+ACCOUNT_ID = $(echo "$AWS_STS_CALLER_IDENTITY" | jq ".Account")
+AWS_ARN = $(echo "$AWS_STS_CALLER_IDENTITY" | jq ".Arn")
+
+
+export AWS_STS_CALLER_IDENTITY;

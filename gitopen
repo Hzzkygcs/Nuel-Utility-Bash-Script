@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+CURRENT_BRANCH=$(currbranch)
+
+if [[ -n "$1" ]]; then
+    git branch "--set-upstream-to=$1/$CURRENT_BRANCH"
+fi
+
+DEFAULT_REMOTE_OF_CURRENT_BRANCH=$(gitdefaultremote)
+echo "Opening $DEFAULT_REMOTE_OF_CURRENT_BRANCH/$CURRENT_BRANCH"
+
+# You may need install additional package to allow `git open` to open git page in browser
+# see https://www.npmjs.com/package/git-open
+git open "$DEFAULT_REMOTE_OF_CURRENT_BRANCH" "$CURRENT_BRANCH"  

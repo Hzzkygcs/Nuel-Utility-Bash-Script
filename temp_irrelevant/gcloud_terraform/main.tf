@@ -6,6 +6,14 @@ provider "google" {
     zone = "us-central1-c"
 }
 
+
+resource "google_project_service" "places_backend_googleapis_com" {
+  service = "calendar-json.googleapis.com"
+
+  disable_on_destroy = true
+}
+
+
 // After applying this, you can see a new Google API Key will be created after applying the terraform:
 // https://console.cloud.google.com/apis/credentials/key/some-unique-name?project=traveloka-testing-calendar-api
 // or:
@@ -16,6 +24,11 @@ resource "google_apikeys_key" "google_calendar_api_key" {
   project      = data.google_project.project.project_id
 
   restrictions {
+    # api_targets {
+    #   methods = []
+    #   service = "maps_backend"
+    # }
+
     api_targets {
       methods = []
       // Service name is retrieved from
