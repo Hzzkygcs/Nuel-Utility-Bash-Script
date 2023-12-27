@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# https://apple.stackexchange.com/a/55886/456119
+# alternative: https://apple.stackexchange.com/a/92637/456119
+
+# only run it once. If you failed, please remove changes from ~/.bash_profile and retry
+
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
+curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o ~/.git-completion.bash
+curl https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh -o ~/.git-completion.zsh
+sudo chmod u+x ~/.git-completion.bash
+sudo chmod u+x ~/.git-completion.zsh
+
+# echo "if [ -f ~/.git-completion.bash ]; then"  | sudo tee  -a ~/.zshenv
+# echo "  . ~/.git-completion.bash"  | sudo tee  -a ~/.zshenv
+# echo "fi"  | sudo tee  -a ~/.zshenv
+
+echo "if [ -f ~/.git-completion.zsh ]; then"  | sudo tee  -a ~/.zshenv
+echo "  . ~/.git-completion.zsh"  | sudo tee  -a ~/.zshenv
+echo "fi"  | sudo tee  -a ~/.zshenv
+
+sudo code ~/.zshenv 
