@@ -144,7 +144,7 @@ If this behaviour is used along with -create-if-not-exist, then it will create /
 INVALID_GET_COMMAND = f"""
 usage: {COMMAND_NAME} get <KEY> [-default DEFAULT_VALUE]
 
--default DEFAULT_VALUEL:
+-default DEFAULT_VALUE:
 If provided, then will return DEFAULT_VALUE when the key cannot be found. It will throw an error otherwise.
 """.strip()
 
