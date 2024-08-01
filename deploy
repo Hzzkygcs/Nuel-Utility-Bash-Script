@@ -2,23 +2,55 @@
 
 CURR_SCRIPT_DIR=$(dirname -- "$( readlink -f -- "$0"; )")
 
+project_name=$(folderconfig get project_name -default "0")
+if [ "$project_name" == "0" ]; then
+  echo "Error: project_name is not set. What is the project_name?"
+  read project_name
+  echo ""
+  echo "Please run this command, which should have been copied to your clipboard:"
+  project_command="folderconfig set project_name $project_name -create-if-not-exist; echo '.-personal-config-file.json' >> .git/info/exclude"
+  echo ""
+  echo "$project_command"
+  echo "$project_command" | xclip -selection clipboard 2>&1 &> /dev/null || true
+  echo "$project_command" | pbcopy  2>&1 &> /dev/null || true
+  exit 1
+fi
+
 kube_repo=$(folderconfig get deployment_repo -default "kube-repo")
 kube_repo="$CURR_SCRIPT_DIR/deploysit/$kube_repo"
 yaml_path=$(folderconfig get yaml_path -default "environment-charts/sit/values.yaml")
 number_of_chars=$(folderconfig get yaml_path -default "4")
+
 git_commit=$(git log -n 1 --pretty=format:"%H" | cut "-c1-$number_of_chars")
+git_branch_name=$(git rev-parse --abbrev-ref HEAD)
+
+last_git_commit_msg=$(git log -n 1 --pretty=format:"%s" | head -n 1)
+# Check if there is a colon in the commit message
+if [[ "$last_git_commit_msg" == *:* ]]; then
+  # Remove all characters up to the first colon and trim leading whitespace
+  last_git_commit_msg="${last_git_commit_msg#*:}"
+  last_git_commit_msg="${last_git_commit_msg#"${last_git_commit_msg%%[![:space:]]*}"}"
+fi
+
+
+
 
 full_yaml_path="$kube_repo/$yaml_path"
 
+echo "Project name: $project_name"
 echo "Kube repo: $kube_repo"
 echo "YAML repo: $yaml_path"
 echo "Num of commit chars: $number_of_chars"
 echo "Git commit: $git_commit"
 
 cd "$kube_repo"
+
+echo "Pulling..."
 git pull
-echo "modifying: $full_yaml_path"
-cat $full_yaml_path
 
+echo "Running..."
 
+replaced_image=$("$CURR_SCRIPT_DIR/deploysit/yaml_edit.py" "$full_yaml_path" "$project_name" "$git_commit")
 
+commit_name="deploy(sit/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]"
+echo "$commit_name"
