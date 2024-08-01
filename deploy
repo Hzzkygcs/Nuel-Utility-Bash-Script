@@ -46,11 +46,18 @@ echo "Git commit: $git_commit"
 cd "$kube_repo"
 
 echo "Pulling..."
+git reset --hard
+git clean -fd
 git pull
 
 echo "Running..."
 
 replaced_image=$("$CURR_SCRIPT_DIR/deploysit/yaml_edit.py" "$full_yaml_path" "$project_name" "$git_commit")
+if [ $? -ne 0 ]; then
+    echo "The yaml_edit.py command failed"
+    exit 1
+fi
 
 commit_name="deploy(sit/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]"
 echo "$commit_name"
+git commit -m "$commit_name"
