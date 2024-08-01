@@ -58,6 +58,23 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+echo ""
 commit_name="deploy(sit/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]"
 echo "$commit_name"
+
+echo ""
+echo ""
+git add .
 git commit -m "$commit_name"
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+git push
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
+echo ""
+echo ""
+echo "$commit_name"
+echo ""
