@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Loop through each pod and collect env variables
+(
+(
+for pod in $(kubectl get pods -o jsonpath='{.items[*].metadata.name}'); do
+  echo "==============================================================================================================="
+  echo "Pod: $pod"
+  echo ""
+  kubectl exec -it $pod -- env
+  echo ""
+  echo ""
+done
+) | code -
+) &
