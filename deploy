@@ -23,6 +23,13 @@ number_of_chars=$(folderconfig get yaml_path -default "4")
 
 git_commit=$(git log -n 1 --pretty=format:"%H" | cut "-c1-$number_of_chars")
 git_branch_name=$(git rev-parse --abbrev-ref HEAD)
+local_commit=$(git rev-parse "$git_branch_name")
+remote_commit=$(git rev-parse "origin/$git_branch_name")
+if [ "$local_commit" != "$remote_commit" ]; then
+    echo "ERROR: Please push your commit first"
+    exit 1
+fi
+
 
 last_git_commit_msg=$(git log -n 1 --pretty=format:"%s" | head -n 1)
 # Check if there is a colon in the commit message
