@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 from io import StringIO
-
-from ruamel.yaml import YAML
+import yaml
 
 # Initialize YAML object
-yaml = YAML()
-yaml.preserve_quotes = True
 import sys
 
 def main(yaml_file, project_name_to_find, new_commit):
     with open(yaml_file) as f:
-        document = yaml.load(f)
+        document = yaml.safe_load(f)
     projects = document['ml-models']['projects']
     for project in projects:
         if project['name'] == project_name_to_find:
