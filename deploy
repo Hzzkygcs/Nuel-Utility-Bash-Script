@@ -101,6 +101,11 @@ if [ "$DEPLOYMENT_ENV" = "prod" ]; then
 fi
 
 cd "$kube_repo"
+if [ "$1" == "open" ]; then
+    COMMIT_URL=$(get_latest_commit_url)
+    open_in_browser $COMMIT_URL
+    exit 0
+fi
 
 echo "Pulling..."
 git reset --hard
@@ -119,8 +124,6 @@ if [ $? -ne 0 ]; then
     echo "$replaced_image"
     echo ""
     echo ""
-    COMMIT_URL=$(get_latest_commit_url)
-    open_in_browser $COMMIT_URL  # open repo kube to see its pipeline
     exit 1
 fi
 
