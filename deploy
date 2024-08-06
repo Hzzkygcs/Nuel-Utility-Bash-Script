@@ -34,6 +34,9 @@ kube_repo="$CURR_SCRIPT_DIR/deploysit/$kube_repo"
 yaml_path=$(folderconfig get yaml_path -default "environment-charts/$DEPLOYMENT_ENV/values.yaml")
 number_of_chars=$(folderconfig get yaml_path -default "4")
 
+LATEST_COMMIT_HASH_FOR_GIT_URL=$(git log -1 --format=%H)
+REPO_URL_FOR_GIT_URL=$(git open --print | sed -E 's|(/tree/.*)|/commit|')
+
 git_commit=$(git log -n 1 --pretty=format:"%H" | cut "-c1-$number_of_chars")
 git_branch_name=$(git rev-parse --abbrev-ref HEAD)
 local_commit=$(git rev-parse "$git_branch_name")
@@ -89,7 +92,9 @@ if [ $? -ne 0 ]; then
 fi
 
 echo ""
-commit_name="deploy($DEPLOYMENT_ENV/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]"
+
+COMMIT_URL="$REPO_URL_FOR_GIT_URL/$LATEST_COMMIT_HASH_FOR_GIT_URL"
+commit_name="deploy($DEPLOYMENT_ENV/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]\n\n$COMMIT_URL"
 echo "$commit_name"
 
 echo ""
@@ -111,3 +116,6 @@ if [ "$DEPLOYMENT_ENV" = "prod" ]; then
   echo "DEPLOYED PROD $project_name"
 fi
 echo ""
+
+COMMIT_URL="$REPO_URL_FOR_GIT_URL/$LATEST_COMMIT_HASH_FOR_GIT_URL"
+echo $COMMIT_URL
