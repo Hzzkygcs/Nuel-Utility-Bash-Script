@@ -34,7 +34,13 @@ def persist(yaml_file, old_img, new_img):
         old_content = f.read()
     if old_content.count(old_img) > 1:
         msg = f"More than one occurrence of {old_img} in {yaml_file}"
-        raise Exception(msg)
+        print(msg)
+        sys.exit(1)
+        return
+    if old_img == new_img:
+        print("===> Old and new image are the same")
+        sys.exit(1)
+        return
     new_content = old_content.replace(old_img, new_img)
     with open(yaml_file, "w") as f:
         f.write(new_content)

@@ -16,9 +16,22 @@ if [ "$project_name" == "0" ]; then
   exit 1
 fi
 
+DEPLOYMENT_ENV="sit"
+if [ "$1" == "prod" ]; then
+    CONFIRMATION_MSG="production $project_name"
+    echo "Are you sure you want to deploy to prod? Please type '$CONFIRMATION_MSG'"
+    read confirmation_input
+    if [ "$confirmation_input" != "$CONFIRMATION_MSG" ]; then
+        echo "Wrong confirmation message..."
+        exit 1
+    fi
+    DEPLOYMENT_ENV="prod"
+    echo "DEPLOYING PROD $project_name"
+fi
+
 kube_repo=$(folderconfig get deployment_repo -default "kube-repo")
 kube_repo="$CURR_SCRIPT_DIR/deploysit/$kube_repo"
-yaml_path=$(folderconfig get yaml_path -default "environment-charts/sit/values.yaml")
+yaml_path=$(folderconfig get yaml_path -default "environment-charts/$DEPLOYMENT_ENV/values.yaml")
 number_of_chars=$(folderconfig get yaml_path -default "4")
 
 git_commit=$(git log -n 1 --pretty=format:"%H" | cut "-c1-$number_of_chars")
@@ -49,6 +62,9 @@ echo "Kube repo: $kube_repo"
 echo "YAML repo: $yaml_path"
 echo "Num of commit chars: $number_of_chars"
 echo "Git commit: $git_commit"
+if [ "$DEPLOYMENT_ENV" = "prod" ]; then
+  echo "DEPLOYING PROD $project_name"
+fi
 
 cd "$kube_repo"
 
@@ -57,16 +73,23 @@ git reset --hard
 git clean -fd
 git pull
 
+
+if [ "$DEPLOYMENT_ENV" = "prod" ]; then
+  echo "DEPLOYING PROD $project_name"
+fi
 echo "Running..."
 
 replaced_image=$("$CURR_SCRIPT_DIR/deploysit/yaml_edit.py" "$full_yaml_path" "$project_name" "$git_commit")
 if [ $? -ne 0 ]; then
     echo "The yaml_edit.py command failed"
+    echo "$replaced_image"
+    echo ""
+    echo ""
     exit 1
 fi
 
 echo ""
-commit_name="deploy(sit/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]"
+commit_name="deploy($DEPLOYMENT_ENV/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]"
 echo "$commit_name"
 
 echo ""
@@ -84,4 +107,7 @@ fi
 echo ""
 echo ""
 echo "$commit_name"
+if [ "$DEPLOYMENT_ENV" = "prod" ]; then
+  echo "DEPLOYED PROD $project_name"
+fi
 echo ""
