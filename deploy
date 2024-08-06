@@ -130,6 +130,7 @@ fi
 echo ""
 
 commit_name="deploy($DEPLOYMENT_ENV/$project_name): $last_git_commit_msg ($replaced_image) [$git_branch_name]\n\n$COMMIT_URL"
+commit_name=$(echo -e "$commit_name")
 echo "$commit_name"
 
 echo ""
