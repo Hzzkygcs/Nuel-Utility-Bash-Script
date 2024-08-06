@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
 
+#------------ created by Hzzkygcs ------------#
+
 get_latest_commit_url() {
-  # Get the latest commit hash
   LATEST_COMMIT_HASH=$(git log -1 --format=%H)
-
-  # Get the repository URL using git-open and ensure it is the base URL
   REPO_URL=$(git open --print | sed -E 's|(/tree/.*)|/commits|')
-
-  # Construct the commit URL
   COMMIT_URL="$REPO_URL/$LATEST_COMMIT_HASH"
-
-  # Print the commit URL
-  echo $COMMIT_URL
+   echo $COMMIT_URL
 }
 open_in_browser() {
   local URL=$1
