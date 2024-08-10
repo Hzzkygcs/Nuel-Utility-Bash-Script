@@ -46,21 +46,27 @@ if [ "$project_name" == "0" ]; then
   exit 1
 fi
 
+
+last_git_commit_msg=$(git log --no-merges -n 1 --pretty=format:"%s")
+# Check if there is a colon in the commit message
+if [[ "$last_git_commit_msg" == *:* ]]; then
+  first_word=$(echo "$last_git_commit_msg" | grep -o '^[[:alnum:]]*')
+
+  # Remove all characters up to the first colon and trim leading whitespace
+  last_git_commit_msg="${last_git_commit_msg#*:}"
+  last_git_commit_msg="$first_word ${last_git_commit_msg#"${last_git_commit_msg%%[![:space:]]*}"}"
+fi
+
+
+
+
+
 DEPLOYMENT_ENV="sit"
 if [ "$1" == "prod" ]; then
-    CONFIRMATION_MSG="production $project_name"
-    git_branch_name=$(git rev-parse --abbrev-ref HEAD)
-    echo "Are you sure you want to deploy to prod: $git_branch_name  -->  $project_name?"
-    echo "Please type \"$CONFIRMATION_MSG\""
-    echo ""
-    read confirmation_input
-    if [ "$confirmation_input" != "$CONFIRMATION_MSG" ]; then
-        echo "Wrong confirmation message..."
-        exit 1
-    fi
     DEPLOYMENT_ENV="prod"
-    echo "DEPLOYING PROD $project_name"
 fi
+
+
 
 kube_repo=$(folderconfig get deployment_repo -default "kube-repo")
 kube_repo="$CURR_SCRIPT_DIR/deploysit/$kube_repo"
@@ -77,18 +83,6 @@ if [ "$local_commit" != "$remote_commit" ]; then
 fi
 
 
-last_git_commit_msg=$(git log --no-merges -n 1 --pretty=format:"%s")
-# Check if there is a colon in the commit message
-if [[ "$last_git_commit_msg" == *:* ]]; then
-  first_word=$(echo "$last_git_commit_msg" | grep -o '^[[:alnum:]]*')
-
-  # Remove all characters up to the first colon and trim leading whitespace
-  last_git_commit_msg="${last_git_commit_msg#*:}"
-  last_git_commit_msg="$first_word ${last_git_commit_msg#"${last_git_commit_msg%%[![:space:]]*}"}"
-fi
-
-echo "$last_git_commit_msg"
-exit 1
 
 full_yaml_path="$kube_repo/$yaml_path"
 COMMIT_URL=$(get_latest_commit_url)
@@ -129,10 +123,32 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo ""
 
 commit_name="deploy($DEPLOYMENT_ENV/$project_abbrev): $last_git_commit_msg ($replaced_image) [$git_branch_name]\n\n$COMMIT_URL"
 commit_name=$(echo -e "$commit_name")
+echo ""
+echo ""
+echo "$commit_name"
+echo ""
+
+if [ "$DEPLOYMENT_ENV" == "prod" ]; then
+    CONFIRMATION_MSG="production $project_name"
+    echo "Are you sure you want to deploy to prod: $git_branch_name  -->  $project_name?"
+    echo "Please type \"$CONFIRMATION_MSG\""
+    echo ""
+    read confirmation_input
+    if [ "$confirmation_input" != "$CONFIRMATION_MSG" ]; then
+        echo "Wrong confirmation message..."
+        git reset --hard &> /dev/null
+        git pull  &> /dev/null
+
+        exit 1
+    fi
+    echo "DEPLOYING PROD $project_name"
+fi
+
+
+echo ""
 echo "$commit_name"
 
 echo ""

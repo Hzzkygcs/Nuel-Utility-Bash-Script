@@ -14,10 +14,13 @@ def main(yaml_file, project_name_to_find, new_commit):
         if project['name'] == project_name_to_find:
             old_img, new_img = modify(project, new_commit)
             persist(yaml_file, old_img, new_img)
-            print(f"{old_img} -> {new_img}")
+            print(f"{get_commit_hash(old_img)} -> {get_commit_hash(new_img)}")
             return
     raise Exception(f"Not found: {project_name_to_find}")
 
+
+def get_commit_hash(string: str):
+    return string.split(":")[1]
 
 
 def modify(project, new_commit):
