@@ -117,6 +117,8 @@ COMMAND_NAME = "folderconfig.py"
 NO_SUBCOMMAND_GIVEN = f"""
 usage: {COMMAND_NAME} <SUBCOMMAND> <KEY>
 where SUBCOMMAND is either `set` or `get`
+
+-- created by Hzzkygcs --
 """.strip()
 
 
