@@ -52,7 +52,10 @@ fi
 DEPLOYMENT_ENV="sit"
 if [ "$1" == "prod" ]; then
     CONFIRMATION_MSG="production $project_name"
-    echo "Are you sure you want to deploy to prod? Please type '$CONFIRMATION_MSG'"
+    git_branch_name=$(git rev-parse --abbrev-ref HEAD)
+    echo "Are you sure you want to deploy to prod: $git_branch_name  -->  $project_name?"
+    echo "Please type \"$CONFIRMATION_MSG\""
+    echo ""
     read confirmation_input
     if [ "$confirmation_input" != "$CONFIRMATION_MSG" ]; then
         echo "Wrong confirmation message..."
