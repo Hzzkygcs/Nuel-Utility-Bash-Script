@@ -75,16 +75,18 @@ if [ "$local_commit" != "$remote_commit" ]; then
 fi
 
 
-last_git_commit_msg=$(git log -n 1 --pretty=format:"%s" | head -n 1)
+last_git_commit_msg=$(git log --no-merges -n 1 --pretty=format:"%s")
 # Check if there is a colon in the commit message
 if [[ "$last_git_commit_msg" == *:* ]]; then
+  first_word=$(echo "$last_git_commit_msg" | grep -o '^[[:alnum:]]*')
+
   # Remove all characters up to the first colon and trim leading whitespace
   last_git_commit_msg="${last_git_commit_msg#*:}"
-  last_git_commit_msg="${last_git_commit_msg#"${last_git_commit_msg%%[![:space:]]*}"}"
+  last_git_commit_msg="$first_word ${last_git_commit_msg#"${last_git_commit_msg%%[![:space:]]*}"}"
 fi
 
-
-
+echo "$last_git_commit_msg"
+exit 1
 
 full_yaml_path="$kube_repo/$yaml_path"
 COMMIT_URL=$(get_latest_commit_url)
