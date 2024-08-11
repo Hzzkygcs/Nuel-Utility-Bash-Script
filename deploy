@@ -132,7 +132,7 @@ echo "$commit_name"
 echo ""
 
 if [ "$DEPLOYMENT_ENV" == "prod" ]; then
-    CONFIRMATION_MSG="production $project_name"
+    CONFIRMATION_MSG="prod $project_name"
     echo "Are you sure you want to deploy to prod: $git_branch_name  -->  $project_name?"
     echo "Please type \"$CONFIRMATION_MSG\""
     echo ""
