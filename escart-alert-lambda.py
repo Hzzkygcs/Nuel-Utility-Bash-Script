@@ -1,9 +1,12 @@
 import json
+import re
+from ast import literal_eval
 import urllib3
 import hmac
 import hashlib
 import base64
 import urllib.parse
+from pprint import pformat
 import http.client
 import asyncio
 import time
@@ -40,32 +43,55 @@ async def main(event, context):
         ret = handle_redirect_url(raw_path)
         print("redirect ", ret)
         return ret
+    if 'Records' in event:
+        for record in event['Records']:
+            message_body = json.loads(record['body'])
+            if message_body['auth'] != LAMBDA_SECURITY_TOKEN:
+                print("ERROR NOT AUTHENTICATED:  ", message_body)
+                continue
+            await handle_queue_message(message_body['body'])
+        return
     if event['headers'].get('security-token') != LAMBDA_SECURITY_TOKEN:
         return {
             'statusCode': 401,
             'body': "missing security header"
         }
+    body = json.loads(body) if isinstance(event['body'], str) else body
+    if 'auth' in body:  # convert sqs-format to HTTP-POST format
+        body = body['body']
+    return await handle_queue_message(body)
 
+
+async def handle_queue_message(body):
     try:
         """
-        Expect opensearch sent-body (message):
+        Expect opensearch sent-body (message) FOR POST REQUEST:
         {{#toJson}}ctx.results{{/toJson}}
+        
+        OR THROUGH API GATEWAY -> SQS -> This Lambda:
+        {
+            "auth": "HzpMyJ5Ypntk9cuT7l58bXOEpF8erKLfNzEFNKblyUyij6R9eJqzFzYKlEUwGDtcJ7",
+            "body": {{#toJson}}ctx.results{{/toJson}}
+        }
         """
-        print(event['body'])
+        print(body)
         # TODO implement
-        loaded = json.loads(event['body'])
+        loaded = json.loads(body) if isinstance(body, str) else body
 
         print("SENDING TO DINGTALK")
-        response = send_dingtalk_message(await preprocess_body(loaded))
+        bbody = await preprocess_body(loaded)
+        response = send_dingtalk_message(bbody)
+
         print("Response  ", response)
+        print("body  ", type(bbody).__name__)
 
         return {
             'statusCode': 200,
-            'body': event,
+            'body': body,
             'response': response,
         }
     except Exception as e:
-        response = send_dingtalk_message(event['body'])
+        response = send_dingtalk_message(body)
         print("ERROR2 ", response,  traceback.format_exception(e))
         return {
             'statusCode': 200,
@@ -100,9 +126,6 @@ async def preprocess_body(loaded: list[dict]):
     print("total_value", total_value)
 
     ret.append(f"Total log error:  {total_value}")
-    ret.append("")
-    ret.append("")
-
     tasks = []
 
     hits = hits["hits"]
@@ -113,9 +136,7 @@ async def preprocess_body(loaded: list[dict]):
     for task in tasks:
         # ret.append(f"{logg['_source']['kubernetes']['deployment']['name']}")
         ret.append(await task)
-        ret.append("")
-    ret = "\n".join(map(str, ret))
-    print(ret)
+    ret = "\n\n===========================\n\n".join(map(str, ret))
     return ret
 
 
@@ -154,13 +175,15 @@ class MessageParser:
             url = f"{LAMBDA_FUNC_URL}/{from_}/{to}/{self.comment_id}"
 
         shorten_prefix="comment-log-" if filter_by_comm_id else "ticket-log-"
-        print(shorten_prefix, url)
+        # print(shorten_prefix, url)
         return await shorten_url_async(url, default_value=url, shorten_prefix=shorten_prefix)
 
 
     async def repr(self):
         url_1 = asyncio.create_task(self.get_opensearch_url())
         url_2 = asyncio.create_task(self.get_opensearch_url(True))
+        message = get_literals(self.msg)
+        print(repr(message))
 
         return f"""
 Timestamp:  {self.opensearch_timestamp}
@@ -172,7 +195,7 @@ Comment ID: {self.comment_id}
 Misc Info:  {(self.scope)} {self.log_type}  
 {remove_none_and_join([await url_1, await url_2])}
 Msg:
-{self.msg}
+{array_to_pretty_printed(message)}
         """.strip()
 
 
@@ -186,7 +209,7 @@ def shorten_url(target_url, shorten_prefix, default_value=None):
     http = urllib3.PoolManager()
 
     for retry in range(1, 15):
-        hash_object = hashlib.sha256(input_string.encode(target_url + str(retry)))
+        hash_object = hashlib.sha256((target_url + str(retry)).encode())
         hex_digest = hash_object.hexdigest()
         shorten_url = f"{shorten_prefix}{hex_digest[-5:]}"
 
@@ -202,7 +225,6 @@ async def shorten_url_async(target_url, shorten_prefix, default_value=None):
     api_path = "/api/shorten"
 
     for retry in range(1, 3):
-        print("RETRY  ", shorten_prefix, retry)
         # Generate the SHA-256 hash and get the last 5 hex digits
         hash_object = hashlib.sha256(f"{target_url}{retry}".encode())
         hex_digest = hash_object.hexdigest()
@@ -291,3 +313,62 @@ def generate_dingtalk_signature(secret):
     sign = urllib.parse.quote_plus(sign)
 
     return timestamp, sign
+
+
+def array_to_pretty_printed(arr: list, separator="  "):
+    ret = []
+    for item in arr:
+        if isinstance(item, str):
+            ret.append(item)
+            continue
+        if isinstance(item, list) and len(item) > 0 and "Traceback" in item[0]:
+            ret.append("\n" + "".join(item))
+            continue
+        ret.append(pformat(item))
+    return separator.join(ret)
+
+
+def get_literals(string: str):
+    pair_mapping = {
+        "{": "}",
+        "[": "]",
+        "'": "'",
+        '"': '"',
+        "(": ")",
+    }
+
+    evaluated = []
+    curr_substring_start = 0
+
+    pattern  = re.compile("\[|\(|\{|\"|'")
+    for match in pattern.finditer(string):
+        start = match.start()
+        if start < curr_substring_start:
+            continue
+
+        found = match.group()
+        pair = pair_mapping[found]
+        for next_potential_ending in find_iter(string, pair, start=start+1):
+            next_potential_ending = next_potential_ending+1
+            substring = string[start:next_potential_ending]
+            try:
+                result = literal_eval(substring)
+                end = next_potential_ending
+                if curr_substring_start < end:
+                    evaluated.append(string[curr_substring_start: start])
+                    curr_substring_start = end+1
+                evaluated.append(result)
+            except:
+                pass
+    end = len(string)
+    if curr_substring_start < end:
+        evaluated.append(string[curr_substring_start:])
+    return evaluated
+
+
+
+def find_iter(string, find, start=0):
+    for index, char in enumerate(string[start:], start=start):
+        if char == find:
+            yield index
+    return
