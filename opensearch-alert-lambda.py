@@ -368,7 +368,7 @@ def get_literals(string: str):
     evaluated = []
     curr_substring_start = 0
 
-    pattern  = re.compile("\[|\(|\{|\"|'")
+    pattern  = re.compile("\\[|\\(|\\{|\"|'")
     for match in pattern.finditer(string):
         start = match.start()
         if start < curr_substring_start:
