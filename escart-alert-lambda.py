@@ -1,5 +1,6 @@
 import json
 import re
+import os
 from ast import literal_eval
 import urllib3
 import hmac
@@ -16,17 +17,31 @@ import hashlib
 
 ACCESS_TOKEN="5db796fd683375146086da10ad2f0265c182411965f118e4cffc4100281a822c"
 SIGN_SEC = "SEC4a30d38b89fe83b6f751a4fbefc76f7e49b1b7411edfcf072d1c758c37aa0125"
+
+ACCESS_TOKEN_PROD = "f7bb91833b87b49f4b143c03be565a1bb40db4573d7ca67fdc72a947cd6d64d3"
+SIGN_SEC_PROD = "SEC074490029488db92eb803f031836e197a6d33b573a8be088b3b842379e5c3690"
+
 LAMBDA_SECURITY_TOKEN = "HzpMyJ5Ypntk9cuT7l58bXOEpF8erKLfNzEFNKblyUyij6R9eJqzFzYKlEUwGDtcJ7"
 LAMBDA_FUNC_URL = "https://vcuhua4ufknky5zetllsawxf2a0xwaxj.lambda-url.ap-southeast-1.on.aws"
 
 OPENSEARCH_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 OPENSEARCH_URL = """
-https://opensearch.automation.dana.id/app/data-explorer/discover#?_a=
-(discover:(columns:!(kubernetes.deployment.name,message,_source),isDirty:!t,sort:!()),metadata:(indexPattern:'92dba400-8ea5-11ee-a56a-355d088e94d1',view:discover))&_g=(filters:!(),refreshInterval:(pause:!t,value:0),
+https://opensearch.automation.dana.id/app/data-explorer/discover#?_a=(discover:(columns:!(kubernetes.deployment.name,message,_source),isDirty:!t,sort:!()),metadata:(indexPattern:'92dba400-8ea5-11ee-a56a-355d088e94d1',view:discover))
+&_g=(filters:!(),refreshInterval:(pause:!t,value:0),
 time:(from:'{TIMESTAMP_FROM}',to:'{TIMESTAMP_TO}'))
-&_q=(filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'92dba400-8ea5-11ee-a56a-355d088e94d1',key:kubernetes.deployment.name.keyword,negate:!f,params:!(ticket-event-receiver-consumer-v1,ticket-event-receiver-v1,comment-event-receiver-v1,comment-public-event-receiver-consumer-v1,comment-private-event-receiver-consumer-v1,comment-private-event-receiver-experimental-consumer-v1,auto-replier-general-consumer-v1,auto-replier-outbound-consumer-v1,auto-replier-dlq-consumer-v1,auto-replier-facebook-public-consumer-v1),type:phrases,value:'ticket-event-receiver-consumer-v1,%20ticket-event-receiver-v1,%20comment-event-receiver-v1,%20comment-public-event-receiver-consumer-v1,%20comment-private-event-receiver-consumer-v1,%20comment-private-event-receiver-experimental-consumer-v1,%20auto-replier-general-consumer-v1,%20auto-replier-outbound-consumer-v1,%20auto-replier-dlq-consumer-v1,%20auto-replier-facebook-public-consumer-v1'),query:(bool:(minimum_should_match:1,should:!((match_phrase:(kubernetes.deployment.name.keyword:ticket-event-receiver-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:ticket-event-receiver-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-event-receiver-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-public-event-receiver-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-private-event-receiver-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-private-event-receiver-experimental-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-general-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-outbound-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-dlq-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-facebook-public-consumer-v1)))))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'92dba400-8ea5-11ee-a56a-355d088e94d1',key:query,negate:!f,type:custom,value:'%7B%22match%22:%7B%22message%22:%2240116314%22%7D%7D')
-,{ADDITIONAL_QUERY}query:(language:kuery,query:''))
+&_q=(filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'92dba400-8ea5-11ee-a56a-355d088e94d1',key:kubernetes.deployment.name.keyword,negate:!f,params:!(ticket-event-receiver-consumer-v1,ticket-event-receiver-v1,comment-event-receiver-v1,comment-public-event-receiver-consumer-v1,comment-private-event-receiver-consumer-v1,comment-private-event-receiver-experimental-consumer-v1,auto-replier-general-consumer-v1,auto-replier-outbound-consumer-v1,auto-replier-dlq-consumer-v1,auto-replier-facebook-public-consumer-v1),type:phrases,value:'ticket-event-receiver-consumer-v1,%20ticket-event-receiver-v1,%20comment-event-receiver-v1,%20comment-public-event-receiver-consumer-v1,%20comment-private-event-receiver-consumer-v1,%20comment-private-event-receiver-experimental-consumer-v1,%20auto-replier-general-consumer-v1,%20auto-replier-outbound-consumer-v1,%20auto-replier-dlq-consumer-v1,%20auto-replier-facebook-public-consumer-v1'),query:(bool:(minimum_should_match:1,should:!((match_phrase:(kubernetes.deployment.name.keyword:ticket-event-receiver-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:ticket-event-receiver-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-event-receiver-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-public-event-receiver-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-private-event-receiver-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:comment-private-event-receiver-experimental-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-general-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-outbound-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-dlq-consumer-v1)),(match_phrase:(kubernetes.deployment.name.keyword:auto-replier-facebook-public-consumer-v1))))))
+{ADDITIONAL_QUERY}
+),query:(language:kuery,query:''))
 """.strip().replace("\n", "")
+
+
+def get_opensearch_url_with_exclude(filter_by: list[str], TIMESTAMP_FROM="", TIMESTAMP_TO=""):
+    conditions = []
+    for condition in filter_by:
+        conditions.append(f",('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'92dba400-8ea5-11ee-a56a-355d088e94d1',key:query,negate:!f,type:custom,value:'%7B%22match%22:%7B%22message%22:%22{condition}%22%7D%7D'),query:(match:(message:{condition})))")
+    conditions = "".join(conditions)
+    return OPENSEARCH_URL.format(ADDITIONAL_QUERY=conditions, TIMESTAMP_FROM=TIMESTAMP_FROM, TIMESTAMP_TO=TIMESTAMP_TO)
+
 
 loop = asyncio.get_event_loop()
 
@@ -34,9 +49,17 @@ loop = asyncio.get_event_loop()
 def lambda_handler(event, context):
     return loop.run_until_complete(main(event, context))
 
+def is_prod():
+    return os.environ.get("prod", 0) == "1"
+
 async def main(event, context):
     raw_path = event.get("rawPath", "/")
     raw_query_str = event.get("rawQueryString", "")
+    print("raw_query_str  ", raw_query_str)
+
+    access_token, sign_token = ACCESS_TOKEN, SIGN_SEC
+    if is_prod():
+        access_token, sign_token = ACCESS_TOKEN_PROD, SIGN_SEC_PROD
 
     print("raw path:  ", raw_path)
     if raw_path.count("/") >= 3:
@@ -49,20 +72,21 @@ async def main(event, context):
             if message_body['auth'] != LAMBDA_SECURITY_TOKEN:
                 print("ERROR NOT AUTHENTICATED:  ", message_body)
                 continue
-            await handle_queue_message(message_body['body'])
+            await handle_queue_message(message_body['body'], access_token, sign_token)
         return
     if event['headers'].get('security-token') != LAMBDA_SECURITY_TOKEN:
         return {
             'statusCode': 401,
             'body': "missing security header"
         }
+    body = event["body"]
     body = json.loads(body) if isinstance(event['body'], str) else body
     if 'auth' in body:  # convert sqs-format to HTTP-POST format
         body = body['body']
-    return await handle_queue_message(body)
+    return await handle_queue_message(body, access_token, sign_token)
 
 
-async def handle_queue_message(body):
+async def handle_queue_message(body, access_token, sign_token):
     try:
         """
         Expect opensearch sent-body (message) FOR POST REQUEST:
@@ -71,8 +95,10 @@ async def handle_queue_message(body):
         OR THROUGH API GATEWAY -> SQS -> This Lambda:
         {
             "auth": "HzpMyJ5Ypntk9cuT7l58bXOEpF8erKLfNzEFNKblyUyij6R9eJqzFzYKlEUwGDtcJ7",
+            "deduplicationId":  "0{{#toJson}}ctx.results.0.hits.hits.0.fields.@timestamp.0{{/toJson}}",
             "body": {{#toJson}}ctx.results{{/toJson}}
         }
+        
         """
         print(body)
         # TODO implement
@@ -80,7 +106,7 @@ async def handle_queue_message(body):
 
         print("SENDING TO DINGTALK")
         bbody = await preprocess_body(loaded)
-        response = send_dingtalk_message(bbody)
+        response = send_dingtalk_message(bbody, access_token, sign_token)
 
         print("Response  ", response)
         print("body  ", type(bbody).__name__)
@@ -91,7 +117,10 @@ async def handle_queue_message(body):
             'response': response,
         }
     except Exception as e:
-        response = send_dingtalk_message(body)
+        if is_prod():
+            print("ERROR2 PROD. Proceed No Longer. ",  traceback.format_exception(e))
+            access_token, sign_token = ACCESS_TOKEN, SIGN_SEC
+        response = send_dingtalk_message(body, access_token, sign_token)
         print("ERROR2 ", response,  traceback.format_exception(e))
         return {
             'statusCode': 200,
@@ -100,15 +129,9 @@ async def handle_queue_message(body):
 
 
 def handle_redirect_url(raw_path):
-    _, timestamp_from, timestamp_to, ticket_id, *comment_id = raw_path.split("/")
-    comment_id = comment_id[0] if len(comment_id) > 0 else None
+    _, timestamp_from, timestamp_to, *filter_by = raw_path.split("/")
 
-    ADDITIONAL_QUERY = [
-        f"query:(match:(message:'{ticket_id}')))),",
-        f"query:(match:(message:'{comment_id}'))))," if comment_id is not None else "",
-    ]
-    url = OPENSEARCH_URL.format(TIMESTAMP_FROM=timestamp_from, TIMESTAMP_TO=timestamp_to,
-                                ADDITIONAL_QUERY="".join(ADDITIONAL_QUERY))
+    url = get_opensearch_url_with_exclude(filter_by, TIMESTAMP_FROM=timestamp_from, TIMESTAMP_TO=timestamp_to)
     # return {"statusCode": 200, "body": url}
     return {
         "headers": {"Location": url, },
@@ -125,12 +148,16 @@ async def preprocess_body(loaded: list[dict]):
     total_value = hits["total"]["value"]
     print("total_value", total_value)
 
-    ret.append(f"Total log error:  {total_value}")
+    ret.append(f"Total error logs:  {total_value}")
     tasks = []
 
     hits = hits["hits"]
+    sent_messages = set()
     for logg in hits:
         msg_parser = MessageParser(logg['_source']['message'], logg['_source']['@timestamp'])
+        if msg_parser.hash() in sent_messages:
+            continue
+        sent_messages.add(msg_parser.hash())
         tasks.append(asyncio.create_task(msg_parser.repr()))
 
     for task in tasks:
@@ -162,22 +189,23 @@ class MessageParser:
         elif len(remaining) == 1:
             self.msg = remaining[0]
 
-    async def get_opensearch_url(self, filter_by_comm_id=False):
-        if filter_by_comm_id and self.comment_id is None:
+    async def get_opensearch_url(self, only_include_error_log=False):
+        if only_include_error_log and self.comment_id is None:
             return None
-
         delta = timedelta(minutes=4)
         from_ =(self.opensearch_datetime - delta).strftime(OPENSEARCH_TIME_FORMAT)
         to = (self.opensearch_datetime + delta).strftime(OPENSEARCH_TIME_FORMAT)
 
-        url = f"{LAMBDA_FUNC_URL}/{from_}/{to}/{self.ticket_id}"
-        if filter_by_comm_id:
-            url = f"{LAMBDA_FUNC_URL}/{from_}/{to}/{self.comment_id}"
+        url = f"{LAMBDA_FUNC_URL}/{from_}/{to}/{self.ticket_id}/{self.comment_id}"
+        if only_include_error_log:
+            url = f"{url}/ERROR"
 
-        shorten_prefix="comment-log-" if filter_by_comm_id else "ticket-log-"
+        shorten_prefix="error-log-" if only_include_error_log else "all-log-"
         # print(shorten_prefix, url)
         return await shorten_url_async(url, default_value=url, shorten_prefix=shorten_prefix)
 
+    def hash(self):
+        return hash(self.msg)
 
     async def repr(self):
         url_1 = asyncio.create_task(self.get_opensearch_url())
@@ -253,13 +281,13 @@ async def shorten_url_async(target_url, shorten_prefix, default_value=None):
 
 
 
-def send_dingtalk_message(message):
+def send_dingtalk_message(message, access_token, sign_token):
     # Generate the timestamp and signature
-    timestamp, signature = generate_dingtalk_signature(SIGN_SEC)
+    timestamp, signature = generate_dingtalk_signature(sign_token)
 
     # Construct the webhook URL with the signature and timestamp
     webhook_url = (
-        f"https://oapi.dingtalk.com/robot/send?access_token={ACCESS_TOKEN}"
+        f"https://oapi.dingtalk.com/robot/send?access_token={access_token}"
         f"&timestamp={timestamp}&sign={signature}"
     )
 
