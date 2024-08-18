@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Initialize an empty string
+if [ "$1" == "" ]; then
+  kubectl config get-contexts
+  exit 1
+fi
+if [ "$1" == "sit" ]; then
+    kubectl config use-context automation-data-sit
+    echo "automation-data-sit"
+    exit 1
+fi
+if [ "$1" == "prod" ]; then
+    kubectl config use-context automation-data-prod
+    echo "automation-data-prod"
+    exit 1
+fi
+
+
+

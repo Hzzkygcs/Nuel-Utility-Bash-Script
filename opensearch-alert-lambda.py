@@ -35,10 +35,15 @@ time:(from:'{TIMESTAMP_FROM}',to:'{TIMESTAMP_TO}'))
 """.strip().replace("\n", "")
 
 
-def get_opensearch_url_with_exclude(filter_by: list[str], TIMESTAMP_FROM="", TIMESTAMP_TO=""):
+def get_opensearch_url_with_exclude(filter_by: list[str], TIMESTAMP_FROM="", TIMESTAMP_TO="", exclude_words=None):
+    if exclude_words is None:
+        exclude_words = []
+
     conditions = []
     for condition in filter_by:
         conditions.append(f",('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'92dba400-8ea5-11ee-a56a-355d088e94d1',key:query,negate:!f,type:custom,value:'%7B%22match%22:%7B%22message%22:%22{condition}%22%7D%7D'),query:(match:(message:{condition})))")
+    for condition in exclude_words:
+        conditions.append(f",('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'92dba400-8ea5-11ee-a56a-355d088e94d1',key:query,negate:!f,type:custom,value:'%7B%22bool%22:%7B%22must_not%22:%7B%22match_phrase%22:%7B%22message%22:%22{condition}%22%7D%7D%7D%7D'),query:(bool:(must_not:(match_phrase:(message:{condition})))))")
     conditions = "".join(conditions)
     return OPENSEARCH_URL.format(ADDITIONAL_QUERY=conditions, TIMESTAMP_FROM=TIMESTAMP_FROM, TIMESTAMP_TO=TIMESTAMP_TO)
 
@@ -105,8 +110,13 @@ async def handle_queue_message(body, access_token, sign_token):
         loaded = json.loads(body) if isinstance(body, str) else body
 
         print("SENDING TO DINGTALK")
-        bbody = await preprocess_body(loaded)
-        response = send_dingtalk_message(bbody, access_token, sign_token)
+        bbody, urgency, total_value  = await preprocess_body(loaded)
+        response = send_dingtalk_message(bbody, access_token, sign_token, urgency > 0)
+
+        if urgency > 0:
+            for i in range(urgency):
+                time.sleep(2)
+                send_dingtalk_message(f"{total_value} errors occurred. Please respond"+" "*i, access_token, sign_token, False)
 
         print("Response  ", response)
         print("body  ", type(bbody).__name__)
@@ -128,10 +138,22 @@ async def handle_queue_message(body, access_token, sign_token):
         }
 
 
+
 def handle_redirect_url(raw_path):
     _, timestamp_from, timestamp_to, *filter_by = raw_path.split("/")
 
-    url = get_opensearch_url_with_exclude(filter_by, TIMESTAMP_FROM=timestamp_from, TIMESTAMP_TO=timestamp_to)
+    includes = []
+    excludes = []
+    for i in filter_by:
+        if len(i) == 0:
+            continue
+        if i.startswith("-"):
+            excludes.append(i[1:])
+            continue
+        includes.append(i)
+
+    url = get_opensearch_url_with_exclude(includes, TIMESTAMP_FROM=timestamp_from, TIMESTAMP_TO=timestamp_to,
+                                          exclude_words=excludes)
     # return {"statusCode": 200, "body": url}
     return {
         "headers": {"Location": url, },
@@ -149,6 +171,10 @@ async def preprocess_body(loaded: list[dict]):
     print("total_value", total_value)
 
     ret.append(f"Total error logs:  {total_value}")
+    urgency = min(3, total_value // 10)
+    for _ in range(urgency):
+        ret[0] += f"\nTotal error logs:  {total_value}"
+
     tasks = []
 
     hits = hits["hits"]
@@ -164,7 +190,7 @@ async def preprocess_body(loaded: list[dict]):
         # ret.append(f"{logg['_source']['kubernetes']['deployment']['name']}")
         ret.append(await task)
     ret = "\n\n===========================\n\n".join(map(str, ret))
-    return ret
+    return ret, urgency, total_value
 
 
 class MessageParser:
@@ -177,28 +203,21 @@ class MessageParser:
             self.msg = msg
             return
 
-        (self.timestamp, self.severity, self.file, self.module,
-         self.func, self.ticket_id, self.comment_id, *remaining)  = msg.split(" ; ", 9)
+        (self.timestamp, self.severity, self.file, self.module, self.func, *remaining)  = msg.split(" ; ", 9)
+
+        self.ticket_id, self.comment_id, self.scope, self.log_type, self.msg = fill_left(remaining, 5, '')
         if not self.comment_id.isalnum():
             self.comment_id = None
-        if len(remaining) == 3:
-            self.scope, self.log_type, self.msg = remaining
-        elif len(remaining) == 2:
-            scope = "-"
-            self.log_type, self.msg = remaining
-        elif len(remaining) == 1:
-            self.msg = remaining[0]
+
 
     async def get_opensearch_url(self, only_include_error_log=False):
-        if only_include_error_log and self.comment_id is None:
-            return None
         delta = timedelta(minutes=4)
         from_ =(self.opensearch_datetime - delta).strftime(OPENSEARCH_TIME_FORMAT)
         to = (self.opensearch_datetime + delta).strftime(OPENSEARCH_TIME_FORMAT)
 
         url = f"{LAMBDA_FUNC_URL}/{from_}/{to}/{self.ticket_id}/{self.comment_id}"
         if only_include_error_log:
-            url = f"{url}/ERROR"
+            url = f"{url}/ERROR/-INFO"
 
         shorten_prefix="error-log-" if only_include_error_log else "all-log-"
         # print(shorten_prefix, url)
@@ -225,6 +244,13 @@ Misc Info:  {(self.scope)} {self.log_type}
 Msg:
 {array_to_pretty_printed(message)}
         """.strip()
+
+
+def fill_left(tuplee, target_num_of_item: int, fill_value=None):
+    if len(tuplee) >= target_num_of_item:
+        return tuplee
+    ret = (fill_value,) * (target_num_of_item - len(tuplee)) + tuple(tuplee)
+    return ret
 
 
 def remove_none_and_join(arr, sep="\n"):
@@ -281,7 +307,7 @@ async def shorten_url_async(target_url, shorten_prefix, default_value=None):
 
 
 
-def send_dingtalk_message(message, access_token, sign_token):
+def send_dingtalk_message(message, access_token, sign_token, mention_all=False):
     # Generate the timestamp and signature
     timestamp, signature = generate_dingtalk_signature(sign_token)
 
@@ -297,7 +323,7 @@ def send_dingtalk_message(message, access_token, sign_token):
     }
     payload = {
         "at": {
-            "isAtAll": False
+            "isAtAll": mention_all
         },
         "msgtype": "text",
         "text": {
@@ -313,7 +339,7 @@ def send_dingtalk_message(message, access_token, sign_token):
         response_data = response.read().decode('utf-8')
         return {
             'statusCode': response.status,
-            'body': json.loads(response_data)
+            'body': response_data
         }
     except Exception as e:
         return {
@@ -349,7 +375,9 @@ def array_to_pretty_printed(arr: list, separator="  "):
         if isinstance(item, str):
             ret.append(item)
             continue
-        if isinstance(item, list) and len(item) > 0 and "Traceback" in item[0]:
+        is_traceback_log = isinstance(item, list) and len(item) > 0 and (
+                "Traceback" in item[0] or ("File" in item[0] and "line" in item[0]))
+        if is_traceback_log:
             ret.append("\n" + "".join(item))
             continue
         ret.append(pformat(item))

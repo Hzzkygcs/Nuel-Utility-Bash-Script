@@ -96,6 +96,8 @@ if [ "$DEPLOYMENT_ENV" = "prod" ]; then
   echo "DEPLOYING PROD $project_name"
 fi
 
+
+GITLAB_DEPLOYMENT_URL=$(get_latest_commit_url)
 cd "$kube_repo"
 if [ "$1" == "open" ]; then
     COMMIT_URL=$(get_latest_commit_url)
@@ -173,3 +175,4 @@ echo ""
 
 COMMIT_URL=$(get_latest_commit_url)
 open_in_browser $COMMIT_URL  # open repo kube to see its pipeline
+echo "$GITLAB_DEPLOYMENT_URL"

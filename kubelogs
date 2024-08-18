@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Initialize an empty string
+result=""
+
+# Loop through all passed arguments
+for arg in "$@"; do
+    # Wrap the argument in .* and append it to the result with a | separator
+    result+=".*${arg}.*|"
+done
+
+# Remove the trailing | from the result
+result=${result%|}
+kubectl config current-context
+echo "$result"
+echo ""
+echo ""
+kubetail "$result" --regex
+
+
+
