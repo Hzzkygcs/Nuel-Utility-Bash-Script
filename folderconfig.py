@@ -10,7 +10,7 @@ from common.io_utils import read_pipelined_input
 import json
 
 
-CONFIG_FILE_NAME = '.-personal-config-file.json'
+CONFIG_FILE_NAME = '.-deployment-config-file.json'
 
 
 def main():

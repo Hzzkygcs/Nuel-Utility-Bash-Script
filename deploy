@@ -38,7 +38,7 @@ if [ "$project_name" == "0" ]; then
   read project_name
   echo ""
   echo "Please run this command, which should have been copied to your clipboard:"
-  project_command="folderconfig set project_name $project_name -create-if-not-exist; echo '.-personal-config-file.json' >> .git/info/exclude"
+  project_command="folderconfig set project_name $project_name -create-if-not-exist; echo '.-deployment-config-file.json' >> .git/info/exclude"
   echo ""
   echo "$project_command"
   echo "$project_command" | xclip -selection clipboard 2>&1 &> /dev/null || true
