@@ -1,0 +1,3 @@
+#!/bin/bash
+
+for deployment in $(kubectl get deployment -oname | grep comment); do kubectl rollout restart "$deployment"; done

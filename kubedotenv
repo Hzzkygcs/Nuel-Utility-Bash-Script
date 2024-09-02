@@ -1,0 +1,6 @@
+#!/bin/bash
+
+
+kubectl get secret escart-global-secret -o jsonpath="{.data}" | jq -r 'to_entries|map("\(.key)=\(.value|@base64d)")|.[]' > .env
+
+
