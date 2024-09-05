@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+git fetch $(folderconfig get branch_name)
+git checkout $(folderconfig get branch_name)
+
+
