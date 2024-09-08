@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# if you're home, you can use this command to prevent your mac from sleep for 30 minutes
+# (you're home whos gonna touch your mac anyway)
+THRESHOLD=30
+SLEEPING_HOLD_DURATION=1800
+
+while true; do
+    # Get the idle time in milliseconds
+    IDLE_TIME_MS=$(ioreg -c IOHIDSystem | awk '/HIDIdleTime/ {print $NF/1000000000; exit}')
+
+    # Convert to seconds
+    IDLE_TIME=${IDLE_TIME_MS%.*}
+
+    # Check if idle time exceeds the threshold
+    if [ "$IDLE_TIME" -ge "$THRESHOLD" ]; then
+        echo "Inactivity detected. Preventing display sleep..."
+        caffeinate -d -t "$SLEEPING_HOLD_DURATION" # Prevents the display from sleeping for 30 minutes
+
+        user_still_idle_threshold=$((THRESHOLD + SLEEPING_HOLD_DURATION - 10))
+        if [ "$IDLE_TIME" -ge "$user_still_idle_threshold" ]; then
+          echo "Inactivity sill detected. Exitting script and allowing display to sleep..."
+          exit 0
+        else
+          echo "User active again"
+        fi
+    fi
+
+    sleep 31
+done
+
