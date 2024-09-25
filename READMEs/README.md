@@ -7,4 +7,4 @@ My to do list to make life easier
 5. Setup git global ignore https://stackoverflow.com/a/22885996/7069108 (`~/.config/git/ignore`)
 lalu tambahin file `.-deployment-config-file.json` ke global git ignore
 6. Kalau pakai Mac, bisa rebind command keys supaya works like windows (command+left move word-backward instead of line back-ward, etc.) tanpa perlu administrator. Caranya coba lihat di README_MAC_KEYBIND.md pada folder ini juga 
-
+7. Buat clipboard history kayak windows (windows+v), bisa pakai Maccy (https://maccy.app/) atau githubnya (https://github.com/p0deje/Maccy) atau `brew install maccy`
