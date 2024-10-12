@@ -1,30 +1,42 @@
 #!/usr/bin/env bash
 
-CRED_FILE="vaultenv_creds"
+if [ "$#" -lt 3 ]; then
+    echo "Error: Insufficient arguments provided."
+    echo "Usage: $0 [sit|prod] vaultPath envFileNamev"
+    exit 1
+fi
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+CRED_FILE="$SCRIPT_DIR/vaultenv_creds"
 
 # Check if the file exists
 if [[ -f "$CRED_FILE" ]]; then
-    echo "Exporting environment variables from $CRED_FILE"
-
     # Automatically export all variables when sourcing
     set -a
     source "$CRED_FILE"
     set +a
-
-    echo "Environment variables exported successfully."
 else
     echo "File '$CRED_FILE' does not exist. Please create it with export variable VAULT_TOKEN_PROD VAULT_TOKEN_SIT."
     exit 1
 fi
 
 
+VAULT_PATH="$2"
 
-if printf '%s\n' "$@" | grep -qx "prod"; then
-  echo "Exporting prod environment..."
+if [ "$1" = "prod" ]; then
+  echo "Exporting prod $VAULT_PATH"
   export VAULT_ADDR="https://vault.automation.dana.id"
   export VAULT_TOKEN="$VAULT_TOKEN_PROD"
 else
-  echo "Exporting sit  environment..."
+  echo "Exporting sit $VAULT_PATH"
   export VAULT_ADDR="https://vault-sit.automation.dana.id"
   export VAULT_TOKEN="$VAULT_TOKEN_SIT"
 fi
+
+echo "$VAULT_ADDR"
+echo "$VAULT_TOKEN"
+temp_json=$(vault kv get -format=json "$VAULT_PATH")
+echo "$temp_json" | jq -r '.data.data | to_entries[] | "\(.key)=\(.value)"' > "$3"
+
+
+
