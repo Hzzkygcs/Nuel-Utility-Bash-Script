@@ -8,25 +8,6 @@ get_latest_commit_url() {
   COMMIT_URL="$REPO_URL/$LATEST_COMMIT_HASH"
    echo $COMMIT_URL
 }
-open_in_browser() {
-  local URL=$1
-
-  # Open the URL in the default browser based on the OS
-  if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    xdg-open $URL
-  elif [[ "$OSTYPE" == "darwin"* ]]; then
-    open $URL
-  elif [[ "$OSTYPE" == "cygwin" ]]; then
-    cygstart $URL
-  elif [[ "$OSTYPE" == "msys" ]]; then
-    start $URL
-  elif [[ "$OSTYPE" == "win32" ]]; then
-    start $URL
-  else
-    echo "Unsupported OS: please open the URL manually"
-  fi
-}
-
 
 CURR_SCRIPT_DIR=$(dirname -- "$( readlink -f -- "$0"; )")
 

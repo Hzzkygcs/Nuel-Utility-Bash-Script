@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+GITLAB_DOMAIN="https://gitlab.dana.id"
+CURRENT_BRANCH=$(git branch --show-current)
+TARGET_MERGE_BRANCH=$(folderconfig get "branch_name" -default "main")
+GITLAB_PROJECT_ID=$(folderconfig get "gitlab_project_id" -default "")
+
+git push origin "$CURRENT_BRANCH"
+echo ""
+echo ""
+
+if [[ "$GITLAB_PROJECT_ID" == "" ]]; then
+  echo "Please provide the gitlab-project-id using \`folderconfig set gitlab_project_id PROJECT_ID\`"
+  exit 1;
+fi;
+
+CURRENT_BRANCH_ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''${CURRENT_BRANCH}''', safe=''))")
+TARGET_MERGE_BRANCH_ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''${TARGET_MERGE_BRANCH}''', safe=''))")
+
+echo "$GITLAB_PROJECT_ID"
+echo "$CURRENT_BRANCH"
+echo "$TARGET_MERGE_BRANCH"
+
+
+
+remote_url=$(git config --get remote.origin.url)
+remote_url="${remote_url%.git}" # Remove .git suffix if present
+remote_url="${remote_url/://}"
+
+# Step 2: Determine the base URL
+if [[ "$remote_url" == git@* ]]; then
+  # Convert SSH URL to HTTPS URL
+  base_url="https://${remote_url#git@}"
+elif [[ "$remote_url" == https://* ]]; then
+  # Use HTTPS URL as is
+  base_url="$remote_url"
+else
+  echo "Unsupported remote URL format."
+  exit 1
+fi
+
+target_url="$base_url/-/merge_requests/new?merge_request%5Bsource_project_id%5D=$GITLAB_PROJECT_ID&merge_request%5Bsource_branch%5D=$CURRENT_BRANCH_ENCODED&merge_request%5Btarget_project_id%5D=$GITLAB_PROJECT_ID&merge_request%5Btarget_branch%5D=$TARGET_MERGE_BRANCH_ENCODED"
+echo "$target_url"
+open_in_browser "$target_url"
